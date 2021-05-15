@@ -426,7 +426,10 @@ public:
     CGAL_warning(initialized ||
                  candidate_provider == 0); // required?
     if(initialized)
-      delete candidate_provider;
+        if (candidate_provider != nullptr) {
+            delete candidate_provider;
+            candidate_provider = nullptr;
+        }
   }
 
   /*

@@ -122,7 +122,10 @@ class Nef_polyhedron_3_rep
     CGAL_NEF_TRACEN( "Nef_polyhedron_3_rep: destroying SNC structure "<<&snc_<<
             ", point locator "<<pl_);
     snc_.clear();
-    delete pl_;
+    if (pl_ != nullptr) {
+      delete pl_;
+      pl_ = nullptr;
+    }
   }
 };
 

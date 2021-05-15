@@ -31,6 +31,8 @@
 #include <map>
 #include <list>
 
+#include <ctime>
+
 #undef CGAL_NEF_DEBUG
 #define CGAL_NEF_DEBUG 43
 #include <CGAL/Nef_2/debug.h>
@@ -1310,16 +1312,50 @@ public:
     CGAL_forall_shalfedges(sei, *this->sncp()) {
       hash[sei->get_index()] = sei->get_index();
     }
+    std::time_t deadline;
+    std::time(&deadline);
+    const uint DEADLINE_TIMEOUT_S = 30;
+    deadline += DEADLINE_TIMEOUT_S;
 
     CGAL_forall_shalfedges(sei, *this->sncp()) {
       if(done[sei])
         continue;
+      if (std::time(nullptr) > deadline) {
+        std::cout << "Broken half-edge circular iterator, out of time limits"
+                  << std::endl;
+        throw std::runtime_error(
+            "Broken half-edge circular iterator, out of time limits");
+      }
+      if (sei == NULL) {
+        std::cout << "Broken hald-edge circular iterator" << std::endl;
+        throw std::runtime_error("Broken half-edge circular iterator, sei");
+      }
       SHalfedge_around_facet_circulator circ(sei), end(circ);
+
       int index = circ->get_index();
       ++circ;
-      CGAL_For_all(circ, end)
-        if(circ->get_index() < index)
+
+      for (bool _circ_loop_flag = !::CGAL::is_empty_range(circ, end);
+           _circ_loop_flag; ) {
+          ++circ;
+          if ((circ == nullptr) || (end == nullptr)) {
+            std::cout << "Broken hald-edge circular iterator" << std::endl;
+            throw std::runtime_error("Broken half-edge circular iterator");
+          }
+          _circ_loop_flag = (circ != end);
+
+          if (std::time(nullptr) > deadline) {
+            std::cout
+                << "Broken half-edge circular iterator, out of time limits"
+                << std::endl;
+            throw std::runtime_error(
+                "Broken half-edge circular iterator, out of time limits");
+          }
+        if (circ->get_index() < index) {
           index = circ->get_index();
+        }
+      }
+
       index = hash[index];
       CGAL_For_all(circ, end) {
         hash[circ->get_index()] = index;
